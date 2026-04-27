@@ -21,9 +21,7 @@ namespace RaylibStd {
     /**
      * @brief {{ func.description }}
      */
-    {% if func.has_varargs %}
-    template <typename... Args>
-    {%- endif %}
+    {% if func.has_varargs %}template <typename... Args> {% endif -%}
     {%- if func.is_nodiscard %}[[nodiscard]] {% endif -%}
     inline {{ func.returnType }} {{ func.name }}({{ func.mapped_params }}) {
         {% if func.returnType != "void" %}return {% endif -%}

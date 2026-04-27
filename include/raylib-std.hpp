@@ -1191,8 +1191,7 @@ namespace RaylibStd {
     /**
      * @brief Show trace log messages (LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERROR...)
      */
-    
-    template <typename... Args>inline void TraceLog(int logLevel, std::string_view text, Args... args) {
+    template <typename... Args> inline void TraceLog(int logLevel, std::string_view text, Args... args) {
         ::TraceLog(logLevel, text.data(), args...);
     }
 
@@ -3523,8 +3522,7 @@ namespace RaylibStd {
     /**
      * @brief Text formatting with variables (sprintf() style)
      */
-    
-    template <typename... Args>inline const char * TextFormat(std::string_view text, Args... args) {
+    template <typename... Args> inline const char * TextFormat(std::string_view text, Args... args) {
         return ::TextFormat(text.data(), args...);
     }
 
