@@ -1,0 +1,61 @@
+name: Unit Tests
+concurrency:
+  group: Unit Tests
+  cancel-in-progress: false
+
+on: [push, pull_request]
+
+jobs:
+  check-header:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - uses: actions/checkout@v6
+      - name: Regenerate Header
+        run: python autogen/autogen.py
+      - name: Check for Changes
+        run: git diff --exit-code include/raylib-std.hpp
+  windows:
+    runs-on: windows-latest
+    needs: check-header
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+      - name: Build
+        run: xmake -y
+      - name: Run Unit Tests
+        run: xmake run tests
+  mac:
+    runs-on: macos-latest
+    needs: check-header
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install LLVM (macOS only)
+        run: brew install llvm
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+      - name: Build
+        run: xmake -y
+      - name: Run Unit Tests
+        run: xmake run tests
+  linux:
+    runs-on: ubuntu-latest
+    needs: check-header
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup xmake
+        uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: latest
+      - name: Build
+        run: xmake -y
+      - name: Run Unit Tests
+        run: xmake run tests
