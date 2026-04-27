@@ -58,7 +58,9 @@ jobs:
       - name: Setup Linux Environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev \
+                                  libxi-dev libgl1-mesa-dev libglu1-mesa-dev \
+                                  libxcursor-dev libxinerama-dev
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
