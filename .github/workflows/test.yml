@@ -55,6 +55,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
+      - name: Setup Linux Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev
       - name: Setup xmake
         uses: xmake-io/github-action-setup-xmake@v1
         with:
