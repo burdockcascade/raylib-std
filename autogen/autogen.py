@@ -1,8 +1,19 @@
 import json
+import re  # New import for regex
 from jinja2 import Environment, FileSystemLoader
 
+def to_snake_case_raylib(name):
+    s = re.sub(r'(?<!^)(?=[A-Z])|(?<=[a-zA-Z])(?=\d)', '_', name).lower()
+    s = (s.replace("2_d", "2d")
+            .replace("3_d", "3d")
+            .replace("f_p_s", "fps")
+            .replace("v_r", "vr")
+            .replace("c_r_c", "crc")
+         )
+
+    return s
+
 def process_functions(raw_functions, enums):
-    # Extract enum names into a set for quick lookup
     enum_names = {em['name'] for em in enums}
     processed_functions = []
 
@@ -12,72 +23,69 @@ def process_functions(raw_functions, enums):
         call_args = []
         has_varargs = False
 
+        # ... (keep existing parameter processing logic) ...
         i = 0
         while i < len(params):
             param = params[i]
             ptype = param['type']
             pname = param['name']
-
-            # Handle variadic arguments
             if ptype == "...":
                 mapped_params.append("Args... args")
                 call_args.append("args...")
                 has_varargs = True
                 i += 1
-
-            # Handle C-strings
             elif ptype == "const char *":
                 mapped_params.append(f"std::string_view {pname}")
                 call_args.append(f"{pname}.data()")
                 i += 1
-
-            # Handle Enum mappings
             elif ptype in enum_names:
                 mapped_params.append(f"{ptype} {pname}")
                 call_args.append(f"std::to_underlying({pname})")
                 i += 1
-
             else:
                 is_span = False
-
-                # Look ahead for span (pointer followed by a size/count integer)
                 if i + 1 < len(params):
                     next_param = params[i + 1]
-                    # Check if current is a pointer (excluding char* and void*)
                     if "*" in ptype and "char" not in ptype and "void" not in ptype:
                         next_name_lower = next_param['name'].lower()
                         if next_param['type'] in ["int", "unsigned int"] and any(kw in next_name_lower for kw in ["count", "size", "length"]):
                             is_span = True
-
                 if is_span:
                     next_param = params[i + 1]
                     base_type = ptype.replace("*", "", 1).strip()
-
                     mapped_params.append(f"std::span<{base_type}> {pname}")
                     call_args.append(f"{pname}.data()")
                     call_args.append(f"static_cast<{next_param['type']}>({pname}.size())")
-
-                    i += 2  # Skip the next parameter since we consumed it for the span
+                    i += 2
                 else:
-                    # Standard parameter fallback
                     mapped_params.append(f"{ptype} {pname}")
                     call_args.append(pname)
                     i += 1
 
-        # Append the cleaned up function data package
+        raw_rtype = func['returnType']
+        cpp_rtype = raw_rtype
+        returns_string = False
+        returns_enum = raw_rtype in enum_names
+
+        if raw_rtype in ["const char *", "char *"]:
+            cpp_rtype = "std::string"
+            returns_string = True
+
         processed_functions.append({
-            'name': func['name'],
+            'name': to_snake_case_raylib(func['name']),
+            'original_name': func['name'],
             'description': func.get('description', ''),
-            'returnType': func['returnType'],
+            'returnType': cpp_rtype,
+            'raw_returnType': raw_rtype,
             'mapped_params': ", ".join(mapped_params),
             'call_args': ", ".join(call_args),
             'has_varargs': has_varargs,
-            'is_nodiscard': func['returnType'] == "bool",
-            'returns_enum': func['returnType'] in enum_names
+            'is_nodiscard': cpp_rtype != "void",
+            'returns_string': returns_string,
+            'returns_enum': returns_enum
         })
 
     return processed_functions
-
 
 def generate_wrapper(json_path, template_path, output_path):
     # Load the raylib metadata

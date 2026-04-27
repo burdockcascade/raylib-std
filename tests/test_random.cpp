@@ -5,10 +5,10 @@ TEST_CASE("Random generation utilities", "[random]") {
 
     SECTION("GetRandomValue stays within bounds") {
         // Set a seed for predictable, deterministic tests
-        RaylibStd::SetRandomSeed(12345);
+        RaylibStd::set_random_seed(12345);
 
         for (int i = 0; i < 50; i++) {
-            int val = RaylibStd::GetRandomValue(5, 10);
+            int val = RaylibStd::get_random_value(5, 10);
             REQUIRE(val >= 5);
             REQUIRE(val <= 10);
         }
@@ -20,7 +20,7 @@ TEST_CASE("Random generation utilities", "[random]") {
         const int maxLimit = 20;
 
         // Load a sequence of non-repeating random numbers
-        int* sequence = RaylibStd::LoadRandomSequence(count, minLimit, maxLimit);
+        int* sequence = RaylibStd::load_random_sequence(count, minLimit, maxLimit);
         REQUIRE(sequence != nullptr);
 
         // Verify boundaries and uniqueness
@@ -35,6 +35,6 @@ TEST_CASE("Random generation utilities", "[random]") {
         }
 
         // Clean up
-        RaylibStd::UnloadRandomSequence(sequence);
+        RaylibStd::unload_random_sequence(sequence);
     }
 }

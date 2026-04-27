@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <string_view>
 #include <span>
 #include "raylib.h"
@@ -21,17 +22,17 @@ namespace RaylibStd {
     /**
      * @brief {{ func.description }}
      */
-    {% if func.has_varargs %}template <typename... Args> {% endif -%}
+    {% if func.has_varargs %} template <typename... Args> {% endif %}
     {%- if func.is_nodiscard %}[[nodiscard]] {% endif -%}
     inline {{ func.returnType }} {{ func.name }}({{ func.mapped_params }}) {
-        {% if func.returnType != "void" %}return {% endif -%}
-
-        {%- if func.returns_enum %}static_cast<{{ func.returnType }}>(
-        {%- endif -%}
-
-        ::{{ func.name }}({{ func.call_args }})
-
-        {%- if func.returns_enum %}){% endif -%};
+        {%- if func.returns_string %}
+        const char* _ret = ::{{ func.original_name }}({{ func.call_args }});
+        return _ret ? std::string(_ret) : std::string();
+        {%- elif func.returnType != "void" %}
+        return {% if func.returns_enum %}static_cast<{{ func.returnType }}>({% endif %}::{{ func.original_name }}({{ func.call_args }}){% if func.returns_enum %}){% endif %};
+        {%- else %}
+        ::{{ func.original_name }}({{ func.call_args }});
+        {%- endif %}
     }
 {% endfor %}
 

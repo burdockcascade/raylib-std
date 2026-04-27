@@ -3,7 +3,7 @@ add_rules("mode.debug", "mode.release")
 set_languages("c++20")
 
 add_requires("raylib 6.0")
-add_requires("catch2")
+add_requires("catch2 3.x")
 
 target("raylib-std")
     set_kind("headeronly")

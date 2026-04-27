@@ -8,8 +8,8 @@ TEST_CASE("Text and string operations", "[text]") {
         std::string myStr = "Raylib-Std Framework";
         std::string_view view(myStr);
         
-        REQUIRE(RaylibStd::TextLength(view) == 20);
-        REQUIRE(RaylibStd::TextIsEqual(view, "Raylib-Std Framework") == true);
+        REQUIRE(RaylibStd::text_length(view) == 20);
+        REQUIRE(RaylibStd::text_is_equal(view, "Raylib-Std Framework") == true);
     }
 
     SECTION("Text format manipulations") {
@@ -17,19 +17,19 @@ TEST_CASE("Text and string operations", "[text]") {
         // It's good to capture them in a std::string for safe comparison.
         
         std::string_view lower = "hello world";
-        std::string upperStr = RaylibStd::TextToUpper(lower);
+        std::string upperStr = RaylibStd::text_to_upper(lower);
         REQUIRE(upperStr == "HELLO WORLD");
 
         std::string_view mixed = "HeLlO WoRlD";
-        std::string lowerStr = RaylibStd::TextToLower(mixed);
+        std::string lowerStr = RaylibStd::text_to_lower(mixed);
         REQUIRE(lowerStr == "hello world");
     }
 
     SECTION("Text parsing") {
         std::string_view numberStr = "42";
-        REQUIRE(RaylibStd::TextToInteger(numberStr) == 42);
+        REQUIRE(RaylibStd::text_to_integer(numberStr) == 42);
 
         std::string_view floatStr = "3.14159";
-        REQUIRE_THAT(RaylibStd::TextToFloat(floatStr), Catch::Matchers::WithinAbs(3.14159f, 0.0001f));
+        REQUIRE_THAT(RaylibStd::text_to_float(floatStr), Catch::Matchers::WithinAbs(3.14159f, 0.0001f));
     }
 }

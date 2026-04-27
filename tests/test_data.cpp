@@ -10,18 +10,18 @@ TEST_CASE("Data encoding and hashing", "[data]") {
 
         // Encode
         int encodedSize = 0;
-        char* encoded = RaylibStd::EncodeDataBase64(
+        std::string encoded = RaylibStd::encode_data_base_64(
             reinterpret_cast<const unsigned char*>(originalText),
             dataSize,
             &encodedSize
         );
 
-        REQUIRE(encoded != nullptr);
-        REQUIRE(encodedSize > 0);
+        REQUIRE(encoded.length() == encodedSize - 1);
+        REQUIRE(encoded != originalText);
 
         // Decode
         int decodedSize = 0;
-        unsigned char* decoded = RaylibStd::DecodeDataBase64(encoded, &decodedSize);
+        unsigned char* decoded = RaylibStd::decode_data_base_64(encoded, &decodedSize);
 
         REQUIRE(decoded != nullptr);
         REQUIRE(decodedSize == dataSize);
@@ -29,15 +29,12 @@ TEST_CASE("Data encoding and hashing", "[data]") {
         // Verify the content is perfectly restored
         REQUIRE(std::memcmp(originalText, decoded, dataSize) == 0);
 
-        // Clean up raylib-allocated memory
-        RaylibStd::MemFree(encoded);
-        RaylibStd::MemFree(decoded);
     }
 
     SECTION("CRC32 Hashing consistency") {
         unsigned char data[] = "test";
         // Raylib/Zlib standard CRC32 for "test" should reliably be 0xD87F7E0C
-        unsigned int hash = RaylibStd::ComputeCRC32(data, 4);
+        unsigned int hash = RaylibStd::compute_crc_32(data, 4);
 
         REQUIRE(hash == 0xD87F7E0C);
     }
