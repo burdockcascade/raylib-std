@@ -5,11 +5,7 @@
 
 namespace RaylibStd {
 
-{# Create a list of all enum names so we can detect them later #}
-{%- set enum_names = [] -%}
-
 {% for em in ems %}
-    {%- set _ = enum_names.append(em.name) -%}
     /**
     * @brief {{ em.description }}
     */
@@ -22,94 +18,22 @@ namespace RaylibStd {
 {% endfor %}
 
 {% for func in functions %}
-    {%- set params = func.get('params', []) -%}
-    
-    {# Arrays to hold the final C++ signature and the C-call arguments #}
-    {%- set mapped_params = [] -%}
-    {%- set call_args = [] -%}
-    
-    {# ns.i acts as our manual index counter so we can skip parameters when merging #}
-    {%- set ns = namespace(i=0, has_varargs=false) -%}
-
-    {%- for _ in params -%}
-        {%- if ns.i < params|length -%}
-            {%- set param = params[ns.i] -%}
-            
-            {%- if param.type == "..." -%}
-                {%- set _ = mapped_params.append("Args... args") -%}
-                {%- set _ = call_args.append("args...") -%}
-                {%- set ns.has_varargs = true -%}
-                {%- set ns.i = ns.i + 1 -%}
-                
-            {%- elif param.type == "const char *" -%}
-                {%- set _ = mapped_params.append("std::string_view " ~ param.name) -%}
-                {%- set _ = call_args.append(param.name ~ ".data()") -%}
-                {%- set ns.i = ns.i + 1 -%}
-            
-            {# --- NEW: Detect Enums --- #}
-            {%- elif param.type in enum_names -%}
-                {%- set _ = mapped_params.append(param.type ~ " " ~ param.name) -%}
-                {%- set _ = call_args.append("std::to_underlying(" ~ param.name ~ ")") -%}
-                {%- set ns.i = ns.i + 1 -%}
-
-            {%- else -%}
-                {# Look ahead to see if the current param and the next param form a span pair #}
-                {%- set is_span = false -%}
-                {%- if ns.i + 1 < params|length -%}
-                    {%- set next_param = params[ns.i + 1] -%}
-                    {# Check if current is a pointer (excluding char* and void*) #}
-                    {%- if "*" in param.type and "char" not in param.type and "void" not in param.type -%}
-                        {%- set next_name_lower = next_param.name | lower -%}
-                        {# Check if the next param is an integer for count/size #}
-                        {%- if next_param.type in ["int", "unsigned int"] and ("count" in next_name_lower or "size" in next_name_lower or "length" in next_name_lower) -%}
-                            {%- set is_span = true -%}
-                        {%- endif -%}
-                    {%- endif -%}
-                {%- endif -%}
-
-                {%- if is_span -%}
-                    {%- set next_param = params[ns.i + 1] -%}
-                    {# Strip one pointer (*) to get the underlying type for the span #}
-                    {%- set base_type = param.type | replace("*", "", 1) | trim -%}
-                    
-                    {%- set _ = mapped_params.append("std::span<" ~ base_type ~ "> " ~ param.name) -%}
-                    {%- set _ = call_args.append(param.name ~ ".data()") -%}
-                    {%- set _ = call_args.append("static_cast<" ~ next_param.type ~ ">(" ~ param.name ~ ".size())") -%}
-                    
-                    {# Skip the next parameter because we just consumed it #}
-                    {%- set ns.i = ns.i + 2 -%}
-                {%- else -%}
-                    {# Standard parameter #}
-                    {%- set _ = mapped_params.append(param.type ~ " " ~ param.name) -%}
-                    {%- set _ = call_args.append(param.name) -%}
-                    {%- set ns.i = ns.i + 1 -%}
-                {%- endif -%}
-                
-            {%- endif -%}
-        {%- endif -%}
-    {%- endfor -%}
-
     /**
      * @brief {{ func.description }}
      */
-    {%- if ns.has_varargs %}
+    {% if func.has_varargs %}
     template <typename... Args>
     {%- endif %}
-    {% if func.returnType == "bool" %}[[nodiscard]] {% endif -%}
-    inline {{ func.returnType }} {{ func.name }}({{ mapped_params | join(', ') }}) {
+    {%- if func.is_nodiscard %}[[nodiscard]] {% endif -%}
+    inline {{ func.returnType }} {{ func.name }}({{ func.mapped_params }}) {
         {% if func.returnType != "void" %}return {% endif -%}
-        
-        {# --- NEW: Cast the return value back to the enum class if necessary --- #}
-        {%- if func.returnType in enum_names -%}
-        static_cast<{{ func.returnType }}>(
+
+        {%- if func.returns_enum %}static_cast<{{ func.returnType }}>(
         {%- endif -%}
-        
-        ::{{ func.name }}({{ call_args | join(', ') }})
-        
-        {%- if func.returnType in enum_names -%}
-        )
-        {%- endif -%}
-        ;
+
+        ::{{ func.name }}({{ func.call_args }})
+
+        {%- if func.returns_enum %}){% endif -%};
     }
 {% endfor %}
 

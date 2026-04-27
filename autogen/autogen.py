@@ -1,34 +1,115 @@
 import json
 from jinja2 import Environment, FileSystemLoader
 
+def process_functions(raw_functions, enums):
+    # Extract enum names into a set for quick lookup
+    enum_names = {em['name'] for em in enums}
+    processed_functions = []
+
+    for func in raw_functions:
+        params = func.get('params', [])
+        mapped_params = []
+        call_args = []
+        has_varargs = False
+
+        i = 0
+        while i < len(params):
+            param = params[i]
+            ptype = param['type']
+            pname = param['name']
+
+            # Handle variadic arguments
+            if ptype == "...":
+                mapped_params.append("Args... args")
+                call_args.append("args...")
+                has_varargs = True
+                i += 1
+
+            # Handle C-strings
+            elif ptype == "const char *":
+                mapped_params.append(f"std::string_view {pname}")
+                call_args.append(f"{pname}.data()")
+                i += 1
+
+            # Handle Enum mappings
+            elif ptype in enum_names:
+                mapped_params.append(f"{ptype} {pname}")
+                call_args.append(f"std::to_underlying({pname})")
+                i += 1
+
+            else:
+                is_span = False
+
+                # Look ahead for span (pointer followed by a size/count integer)
+                if i + 1 < len(params):
+                    next_param = params[i + 1]
+                    # Check if current is a pointer (excluding char* and void*)
+                    if "*" in ptype and "char" not in ptype and "void" not in ptype:
+                        next_name_lower = next_param['name'].lower()
+                        if next_param['type'] in ["int", "unsigned int"] and any(kw in next_name_lower for kw in ["count", "size", "length"]):
+                            is_span = True
+
+                if is_span:
+                    next_param = params[i + 1]
+                    base_type = ptype.replace("*", "", 1).strip()
+
+                    mapped_params.append(f"std::span<{base_type}> {pname}")
+                    call_args.append(f"{pname}.data()")
+                    call_args.append(f"static_cast<{next_param['type']}>({pname}.size())")
+
+                    i += 2  # Skip the next parameter since we consumed it for the span
+                else:
+                    # Standard parameter fallback
+                    mapped_params.append(f"{ptype} {pname}")
+                    call_args.append(pname)
+                    i += 1
+
+        # Append the cleaned up function data package
+        processed_functions.append({
+            'name': func['name'],
+            'description': func.get('description', ''),
+            'returnType': func['returnType'],
+            'mapped_params': ", ".join(mapped_params),
+            'call_args': ", ".join(call_args),
+            'has_varargs': has_varargs,
+            'is_nodiscard': func['returnType'] == "bool",
+            'returns_enum': func['returnType'] in enum_names
+        })
+
+    return processed_functions
+
+
 def generate_wrapper(json_path, template_path, output_path):
     # Load the raylib metadata
     with open(json_path, 'r') as f:
         data = json.load(f)
-    
+
     # Setup Jinja2 environment to load from the current directory
     env = Environment(loader=FileSystemLoader('.'))
 
-
     try:
-        # Correct way to load the template file
         jt2_template = env.get_template(template_path)
-        
-        # Render the template using the 'functions' list from the JSON
+
+        enums = data.get('enums', [])
+        raw_functions = data.get('functions', [])
+
+        # Process logic in python before passing to jinja
+        processed_functions = process_functions(raw_functions, enums)
+
+        # Render the template using the simplified lists
         output = jt2_template.render(
-            functions=data.get('functions', []),
-            ems=data.get('enums', []) 
+            functions=processed_functions,
+            ems=enums
         )
-        
+
         # Write the final C++ header
         with open(output_path, 'w') as f:
             f.write(output)
-        
+
         print(f"Successfully generated {output_path}")
-        
+
     except Exception as e:
         print(f"Error during generation: {e}")
 
 if __name__ == "__main__":
-    # Ensure these paths match your actual directory structure
     generate_wrapper('autogen/raylib6.json', 'autogen/raylib-std.hpp.jt2', 'include/raylib-std.hpp')
