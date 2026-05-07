@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <span>
+#include <utility>
 #include "raylib.h"
 
 namespace RaylibStd {
@@ -1187,8 +1188,8 @@ namespace RaylibStd {
     /**
      * @brief Set the current threshold (minimum) log level
      */
-    inline void set_trace_log_level(int logLevel) {
-        ::SetTraceLogLevel(logLevel);
+    inline void set_trace_log_level(TraceLogLevel logLevel) {
+        ::SetTraceLogLevel(std::to_underlying(logLevel));
     }
 
     /**
@@ -1637,8 +1638,8 @@ namespace RaylibStd {
     /**
      * @brief Check if a key has been pressed once
      */
-    [[nodiscard]] inline bool is_key_pressed(int key) {
-        return ::IsKeyPressed(key);
+    [[nodiscard]] inline bool is_key_pressed(KeyboardKey key) {
+        return ::IsKeyPressed(std::to_underlying(key));
     }
 
     /**
@@ -1651,22 +1652,22 @@ namespace RaylibStd {
     /**
      * @brief Check if a key is being pressed
      */
-    [[nodiscard]] inline bool is_key_down(int key) {
-        return ::IsKeyDown(key);
+    [[nodiscard]] inline bool is_key_down(KeyboardKey key) {
+        return ::IsKeyDown(std::to_underlying(key));
     }
 
     /**
      * @brief Check if a key has been released once
      */
-    [[nodiscard]] inline bool is_key_released(int key) {
-        return ::IsKeyReleased(key);
+    [[nodiscard]] inline bool is_key_released(KeyboardKey key) {
+        return ::IsKeyReleased(std::to_underlying(key));
     }
 
     /**
      * @brief Check if a key is NOT being pressed
      */
-    [[nodiscard]] inline bool is_key_up(int key) {
-        return ::IsKeyUp(key);
+    [[nodiscard]] inline bool is_key_up(KeyboardKey key) {
+        return ::IsKeyUp(std::to_underlying(key));
     }
 
     /**
@@ -1779,29 +1780,29 @@ namespace RaylibStd {
     /**
      * @brief Check if a mouse button has been pressed once
      */
-    [[nodiscard]] inline bool is_mouse_button_pressed(int button) {
-        return ::IsMouseButtonPressed(button);
+    [[nodiscard]] inline bool is_mouse_button_pressed(MouseButton button) {
+        return ::IsMouseButtonPressed(std::to_underlying(button));
     }
 
     /**
      * @brief Check if a mouse button is being pressed
      */
-    [[nodiscard]] inline bool is_mouse_button_down(int button) {
-        return ::IsMouseButtonDown(button);
+    [[nodiscard]] inline bool is_mouse_button_down(MouseButton button) {
+        return ::IsMouseButtonDown(std::to_underlying(button));
     }
 
     /**
      * @brief Check if a mouse button has been released once
      */
-    [[nodiscard]] inline bool is_mouse_button_released(int button) {
-        return ::IsMouseButtonReleased(button);
+    [[nodiscard]] inline bool is_mouse_button_released(MouseButton button) {
+        return ::IsMouseButtonReleased(std::to_underlying(button));
     }
 
     /**
      * @brief Check if a mouse button is NOT being pressed
      */
-    [[nodiscard]] inline bool is_mouse_button_up(int button) {
-        return ::IsMouseButtonUp(button);
+    [[nodiscard]] inline bool is_mouse_button_up(MouseButton button) {
+        return ::IsMouseButtonUp(std::to_underlying(button));
     }
 
     /**

@@ -17,18 +17,35 @@ def process_functions(raw_functions, enums):
     enum_names = {em['name'] for em in enums}
     processed_functions = []
 
+    TYPE_OVERRIDES = {
+        "SetTraceLogLevel": {"logLevel": "TraceLogLevel"},
+        "IsKeyPressed": {"key": "KeyboardKey"},
+        "IsKeyDown": {"key": "KeyboardKey"},
+        "IsKeyReleased": {"key": "KeyboardKey"},
+        "IsKeyUp": {"key": "KeyboardKey"},
+        "IsMouseButtonPressed": {"button": "MouseButton"},
+        "IsMouseButtonDown": {"button": "MouseButton"},
+        "IsMouseButtonReleased": {"button": "MouseButton"},
+        "IsMouseButtonUp": {"button": "MouseButton"},
+        # You can easily add more here as you discover them!
+    }
+
     for func in raw_functions:
+        original_name = func['name']
         params = func.get('params', [])
         mapped_params = []
         call_args = []
         has_varargs = False
 
-        # ... (keep existing parameter processing logic) ...
         i = 0
         while i < len(params):
             param = params[i]
             ptype = param['type']
             pname = param['name']
+
+            if original_name in TYPE_OVERRIDES and pname in TYPE_OVERRIDES[original_name]:
+                ptype = TYPE_OVERRIDES[original_name][pname]
+
             if ptype == "...":
                 mapped_params.append("Args... args")
                 call_args.append("args...")

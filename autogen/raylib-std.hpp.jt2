@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <span>
+#include <utility> // Required for std::to_underlying (C++23)
 #include "raylib.h"
 
 namespace RaylibStd {

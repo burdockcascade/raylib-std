@@ -1,6 +1,6 @@
 add_rules("mode.debug", "mode.release")
 
-set_languages("c++20")
+set_languages("c++23")
 
 add_requires("raylib 6.0")
 add_requires("catch2 3.x")

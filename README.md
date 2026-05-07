@@ -1,12 +1,14 @@
 # Raylib-Std
-Raylib-Std is a modern C++20 header-only wrapper for the raylib game programming library. It provides a more idiomatic C++ developer experience while maintaining the simplicity and performance of the original C API.
+Raylib-Std is a modern C++23 header-only wrapper for the raylib game programming library. It provides a more idiomatic C++ developer experience while maintaining the simplicity and performance of the original C API.
+
+_Note: This project is not affiliated with Raylib or its developer._
 
 ## Key Features
 - Idiomatic C++ Interfaces: Replaces raw C pointers and character arrays with modern alternatives like std::string_view, std::string, and std::span for safer and more flexible data handling.
 - Header-Only: Easy to integrate into any project by simply including the single raylib-std.hpp header.
 - Type-Safe Enums: Converts raylib’s global #define constants into scoped enum class types (e.g., KeyboardKey, ConfigFlags, MouseButton), improving code clarity and reducing namespace pollution.
 - Namespace Protection: All wrapper functions and types are contained within the RaylibStd namespace to prevent naming conflicts.
-- Modern Build Support: Includes out-of-the-box support for xmake and CMake, targeting the C++20 standard.
+- Modern Build Support: Includes out-of-the-box support for xmake and CMake, targeting the C++23 standard.
 
 ## Example
 ```cpp
